@@ -63,13 +63,14 @@ def show_pokemon(request, pokemon_id):
     else:
         previous_evolution = ''
 
-    if pokemon_class.next_evolution:
+    try:
+        next_pokemon = pokemon_class.prev_evolution.all()[0]
         next_evolution = {
-            'pokemon_id': pokemon_class.next_evolution.id,
-            'title_ru': pokemon_class.next_evolution.title,
-            'img_url': pokemon_class.next_evolution.photo.url,
+            'pokemon_id': next_pokemon.id,
+            'title_ru': next_pokemon.title,
+            'img_url': next_pokemon.photo.url,
         }
-    else:
+    except IndexError:
         next_evolution = ''
 
     pokemon = {

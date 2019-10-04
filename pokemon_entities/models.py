@@ -24,15 +24,7 @@ class Pokemon(models.Model):
         null=True,
         blank=True,
         on_delete=models.CASCADE,
-        related_name='previous_ev',
-    )
-    next_evolution = models.ForeignKey(
-        'self',
-        verbose_name='Следующая эволюция',
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name='next_ev',
+        related_name='prev_evolution',
     )
     photo = models.ImageField('Фото', blank=True, null=True)
 
