@@ -32,7 +32,7 @@ def show_all_pokemons(request):
         pokemons_on_page.append(
             {
                 'pokemon_id': pokemon.id,
-                'img_url': pokemon.photo.url if pokemon.photo else '',
+                'img_url': pokemon.photo.url if pokemon.photo else DEFAULT_IMAGE_URL,
                 'title_ru': pokemon.title,
             }
         )
@@ -50,27 +50,33 @@ def show_pokemon(request, pokemon_id):
     except ObjectDoesNotExist:
         return HttpResponseNotFound('<h1>Такой покемон не найден</h1>')
 
+    if pokemon_class.previous_evolution:
+        previous_evolution = {
+            'pokemon_id': pokemon_class.previous_evolution.id,
+            'title_ru': pokemon_class.previous_evolution.title,
+            'img_url': pokemon_class.previous_evolution.photo.url,
+        }
+    else:
+        previous_evolution = ''
+
+    if pokemon_class.next_evolution:
+        next_evolution = {
+            'pokemon_id': pokemon_class.next_evolution.id,
+            'title_ru': pokemon_class.next_evolution.title,
+            'img_url': pokemon_class.next_evolution.photo.url,
+        }
+    else:
+        next_evolution = ''
+
     pokemon = {
         'pokemon_id': pokemon_class.id,
         'title_ru': pokemon_class.title,
         'title_en': pokemon_class.title_en,
         'title_jp': pokemon_class.title_jp,
-        'img_url': pokemon_class.photo.url if pokemon_class.photo else '',
+        'img_url': pokemon_class.photo.url if pokemon_class.photo else DEFAULT_IMAGE_URL,
         'description': pokemon_class.description,
-        'previous_evolution': {
-            'pokemon_id': pokemon_class.previous_evolution.id,
-            'title_ru': pokemon_class.previous_evolution.title,
-            'img_url': pokemon_class.previous_evolution.photo.url,
-        }
-        if pokemon_class.previous_evolution
-        else '',
-        'next_evolution': {
-            'pokemon_id': pokemon_class.next_evolution.id,
-            'title_ru': pokemon_class.next_evolution.title,
-            'img_url': pokemon_class.next_evolution.photo.url,
-        }
-        if pokemon_class.next_evolution
-        else '',
+        'previous_evolution': previous_evolution,
+        'next_evolution': next_evolution,
     }
 
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
@@ -79,7 +85,7 @@ def show_pokemon(request, pokemon_id):
         photo_url = (
             request.build_absolute_uri(pokemon_entity.pokemon.photo.url)
             if pokemon_entity.pokemon.photo
-            else ''
+            else DEFAULT_IMAGE_URL
         )
         if not photo_url:
             continue
