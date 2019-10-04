@@ -2,6 +2,7 @@ import folium
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseNotFound
 from django.shortcuts import render
+from django.db import connection
 
 from .models import Pokemon, PokemonEntity
 
@@ -16,8 +17,10 @@ def add_pokemon(folium_map, lat, lon, name, image_url=DEFAULT_IMAGE_URL):
 
 def show_all_pokemons(request):
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
+    pokemons_entities = PokemonEntity.objects.all().select_related('pokemon')
+    pokemons = Pokemon.objects.all()
 
-    for pokemon in PokemonEntity.objects.all():
+    for pokemon in pokemons_entities:
         photo_url = (
             request.build_absolute_uri(pokemon.pokemon.photo.url)
             if pokemon.pokemon.photo
@@ -26,9 +29,9 @@ def show_all_pokemons(request):
         if not photo_url:
             continue
         add_pokemon(folium_map, pokemon.lat, pokemon.lon, pokemon.pokemon, photo_url)
-    pokemons_on_page = []
 
-    for pokemon in Pokemon.objects.all():
+    pokemons_on_page = []
+    for pokemon in pokemons:
         pokemons_on_page.append(
             {
                 'pokemon_id': pokemon.id,
@@ -45,9 +48,10 @@ def show_all_pokemons(request):
 
 
 def show_pokemon(request, pokemon_id):
+    pokemon_entities = PokemonEntity.objects.filter(pokemon=pokemon_id).select_related('pokemon')
     try:
-        pokemon_class = Pokemon.objects.get(id=pokemon_id)
-    except ObjectDoesNotExist:
+        pokemon_class = pokemon_entities[0].pokemon
+    except IndexError:
         return HttpResponseNotFound('<h1>Такой покемон не найден</h1>')
 
     if pokemon_class.previous_evolution:
@@ -80,7 +84,6 @@ def show_pokemon(request, pokemon_id):
     }
 
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
-    pokemon_entities = PokemonEntity.objects.filter(pokemon=pokemon_class)
     for pokemon_entity in pokemon_entities:
         photo_url = (
             request.build_absolute_uri(pokemon_entity.pokemon.photo.url)
