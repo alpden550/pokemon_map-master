@@ -3,7 +3,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseNotFound
 from django.shortcuts import render
 
-from .models import Pokemon
+from .models import Pokemon, PokemonEntity
 
 MOSCOW_CENTER = [55.751244, 37.618423]
 DEFAULT_IMAGE_URL = "https://vignette.wikia.nocookie.net/pokemon/images/6/6e/%21.png/revision/latest/fixed-aspect-ratio-down/width/240/height/240?cb=20130525215832&fill=transparent"
@@ -16,10 +16,10 @@ def add_pokemon(folium_map, lat, lon, name, image_url=DEFAULT_IMAGE_URL):
 
 def show_all_pokemons(request):
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
-    all_pokemons = Pokemon.objects.prefetch_related('pokemon_entity').all()
+    all_pokemons = Pokemon.objects.prefetch_related('pokemon_entities').all()
     all_entities = []
     for pokemon in all_pokemons:
-        all_entities.extend(pokemon.pokemon_entity.all())
+        all_entities.extend(pokemon.pokemon_entities.all())
 
     for pokemon in all_entities:
         photo_url = (
@@ -50,7 +50,7 @@ def show_all_pokemons(request):
 
 def show_pokemon(request, pokemon_id):
     try:
-        pokemon_class = Pokemon.objects.prefetch_related('pokemon_entity').get(id=pokemon_id)
+        pokemon_class = Pokemon.objects.prefetch_related('pokemon_entities').get(id=pokemon_id)
     except ObjectDoesNotExist:
         return HttpResponseNotFound('<h1>Такой покемон не найден</h1>')
 
@@ -64,7 +64,7 @@ def show_pokemon(request, pokemon_id):
         previous_evolution = ''
 
     try:
-        next_pokemon = pokemon_class.prev_evolution.all()[0]
+        next_pokemon = pokemon_class.next_evolutions.all()[0]
         next_evolution = {
             'pokemon_id': next_pokemon.id,
             'title_ru': next_pokemon.title,
@@ -86,7 +86,7 @@ def show_pokemon(request, pokemon_id):
 
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
 
-    pokemon_entities = pokemon_class.pokemon_entity.all()
+    pokemon_entities = pokemon_class.pokemon_entities.all()
     for pokemon_entity in pokemon_entities:
         photo_url = (
             request.build_absolute_uri(pokemon_entity.pokemon.photo.url)
