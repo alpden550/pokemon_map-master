@@ -86,6 +86,16 @@ def show_pokemon(request, pokemon_id):
     except IndexError:
         next_evolution = ''
 
+    elements = pokemon_class.elements.all()
+    element_types = []
+    for element in elements:
+        image = element.avatar.url if element.avatar else DEFAULT_IMAGE_URL
+        element_types.append({
+            'title': element.name,
+            'img': image,
+            'strong_against': element.strong_against.all()
+        })
+
     pokemon = {
         'pokemon_id': pokemon_class.id,
         'title_ru': pokemon_class.title,
@@ -95,6 +105,7 @@ def show_pokemon(request, pokemon_id):
         'description': pokemon_class.description,
         'previous_evolution': previous_evolution,
         'next_evolution': next_evolution,
+        'element_type': element_types,
     }
 
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)

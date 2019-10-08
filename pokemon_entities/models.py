@@ -4,9 +4,10 @@ from django.db import models
 class PokemonElementType(models.Model):
     name = models.CharField('Стихия', max_length=120)
     avatar = models.ImageField('Аватар стихии', upload_to='type', null=True, blank=True)
+    strong_against = models.ManyToManyField('self', verbose_name='Силен против', blank=True, related_name='pokemon_entities', symmetrical=False)
 
     def __str__(self):
-        return f'Element {self.name}'
+        return f'{self.name}'
 
 
 class Pokemon(models.Model):
