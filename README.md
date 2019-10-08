@@ -1,6 +1,6 @@
 # Карта покемонов
 
-![sample text](https://dvmn.org/filer/canonical/1563275070/172/)
+![pokemons map](image/pokemons.gif)
 
 ### Предметная область
 
