@@ -1,17 +1,29 @@
+import branca
 import folium
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseNotFound
 from django.shortcuts import render
 
-from .models import Pokemon, PokemonEntity
+from .models import Pokemon
 
 MOSCOW_CENTER = [55.751244, 37.618423]
 DEFAULT_IMAGE_URL = "https://vignette.wikia.nocookie.net/pokemon/images/6/6e/%21.png/revision/latest/fixed-aspect-ratio-down/width/240/height/240?cb=20130525215832&fill=transparent"
 
 
-def add_pokemon(folium_map, lat, lon, name, image_url=DEFAULT_IMAGE_URL):
+def add_pokemon(folium_map, lat, lon, name, pokemon, image_url=DEFAULT_IMAGE_URL):
     icon = folium.features.CustomIcon(image_url, icon_size=(50, 50))
-    folium.Marker([lat, lon], tooltip=name, icon=icon).add_to(folium_map)
+    html = f"""
+        <h4>{pokemon.pokemon}</h4>
+        <p><b>Уровень</b>: {pokemon.level}<br>
+        <b>Здоровье</b>: {pokemon.health}<br>
+        <b>Сила</b>: {pokemon.strength}<br>
+        <b>Защита</b>: {pokemon.defence}<br>
+        <b>Выносливость</b>: {pokemon.stamina}<br>
+        </p>
+        """
+    iframe = branca.element.IFrame(html=html, width=200, height=150)
+    popup = folium.Popup(iframe)
+    folium.Marker([lat, lon], tooltip=name, icon=icon, popup=popup).add_to(folium_map)
 
 
 def show_all_pokemons(request):
@@ -22,6 +34,7 @@ def show_all_pokemons(request):
         all_entities.extend(pokemon.pokemon_entities.all())
 
     for pokemon in all_entities:
+
         photo_url = (
             request.build_absolute_uri(pokemon.pokemon.photo.url)
             if pokemon.pokemon.photo
@@ -29,7 +42,7 @@ def show_all_pokemons(request):
         )
         if not photo_url:
             continue
-        add_pokemon(folium_map, pokemon.lat, pokemon.lon, pokemon.pokemon, photo_url)
+        add_pokemon(folium_map, pokemon.lat, pokemon.lon, pokemon.pokemon, pokemon, photo_url)
 
     pokemons_on_page = []
     for pokemon in all_pokemons:
@@ -100,6 +113,7 @@ def show_pokemon(request, pokemon_id):
             pokemon_entity.lat,
             pokemon_entity.lon,
             pokemon_entity.pokemon.title,
+            pokemon_entity,
             photo_url,
         )
 
